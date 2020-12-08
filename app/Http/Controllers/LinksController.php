@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Str;
+use \Cviebrock\EloquentSluggable\Services\SlugService;
 use Illuminate\Http\Request;
 use App\Jobs\ProcessAnalytics;
 use App\Link;
@@ -40,6 +40,8 @@ class LinksController extends Controller
      */
     public function store(Request $request)
     {
+        $unique = substr(md5(uniqid(rand(), true)), 3, 3);
+
         $validator = Validator::make($request->all(), [
             'url' => 'required|url|max:255'
         ]);
@@ -51,7 +53,7 @@ class LinksController extends Controller
         try {
             $link       = new Link;
             $link->from = $request->url;
-            $link->to   = (string) Str::uuid();
+            $link->to   = SlugService::createSlug(Link::class, 'to', $unique);
             $link->save();
         } catch (\Exception $e) {
             Log::error($e);
